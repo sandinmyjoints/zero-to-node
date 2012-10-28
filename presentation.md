@@ -122,7 +122,7 @@ fn = function (args) {    fn = (args) ->
 var obj = {               obj =
   key: value                key: value
 };
-</pre></code>
+</code></pre>
 
 * Grunt: watch, test, server.
 
