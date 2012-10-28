@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=1024, user-scalable=no">
+
+	<title>Zero to Node</title>
+	
+	<!-- Required stylesheet -->
+	<link rel="stylesheet" href="core/deck.core.css">
+	
+	<!-- Extension CSS files go here. Remove or add as needed. -->
+	<link rel="stylesheet" href="extensions/goto/deck.goto.css">
+	<link rel="stylesheet" href="extensions/menu/deck.menu.css">
+	<link rel="stylesheet" href="extensions/navigation/deck.navigation.css">
+	<link rel="stylesheet" href="extensions/status/deck.status.css">
+	<link rel="stylesheet" href="extensions/hash/deck.hash.css">
+	<link rel="stylesheet" href="extensions/scale/deck.scale.css">
+
+	<!-- Style theme. More available in /themes/style/ or create your own. -->
+	<!-- <link rel="stylesheet" href="themes/style/web-2.0.css"> -->
+	<link rel="stylesheet" href="themes/style/sandstone/sandstone.firefox.css">
+	
+	<!-- Transition theme. More available in /themes/transition/ or create your own. -->
+	<link rel="stylesheet" href="themes/transition/horizontal-slide.css">
+	
+	<!-- Required Modernizr file -->
+	<script src="modernizr.custom.js"></script>
+</head>
+<body class="deck-container">
+<section class="slide"><h1>Zero to Node: Node.js in Production</h1>
+</section>
+             <section class="slide">
+<h2>Goal</h2>
+<h3>Show one way to do Node.</h3>
+<ul>
+<li>
+<p>There are many. This was ours.</p>
+</li>
+<li>
+<p>Full Disclosure: I'm still learning.</p>
+</li>
+<li>
+<p>For expert advice, the internet is your best bet.</p>
+</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>The Problem</h2>
+<ul>
+<li>
+<p>Teaching a language means teaching pronunciation.</p>
+</li>
+<li>
+<p>Users want to learn how to pronounce arbitrary text.</p>
+</li>
+<li>
+<p>We have a command-line TTS application.</p>
+</li>
+<li>
+<p>But our legacy PHP app to generate audio is broken.</p>
+</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>The Solution</h2>
+<h3>A node.js app.</h3>
+<ul>
+<li>
+<p>Ryan and Chris assert: <strong>Node.js can do this</strong>.</p>
+</li>
+<li>
+<p>Me: OK.</p>
+</li>
+<li>
+<p>Thus was born <strong>cicero</strong>.</p>
+</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Yikes!</h2>
+<ul>
+<li>Lots of users!</li>
+<li>New stack and framework!</li>
+<li>Async!</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>What's This App Really Doing?</h2>
+<ul>
+<li>
+<p>Taking in a string and:</p>
+<ul>
+<li>serving from cache, or</li>
+<li>generating an mp3, serving to user, and caching</li>
+</ul>
+</li>
+<li>
+<p>In other words, <strong>slinging data</strong>. Node can do that really well.</p>
+</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Getting started</h2>
+<p>Install is easy enough...</p>
+<pre><code>$ brew install node
+$ git clone git://github.com/creationix/nvm.git ~/nvm
+$ . ~/nvm/nvm.sh
+$ nvm use v0.8.9
+</code></pre>
+<p>Check nodejs.org for other platforms.</p>
+</section>
+             <section class="slide">
+<h2>Dependencies</h2>
+<p>Node has <strong>lots</strong> of third-party packages.</p>
+<p>Here's what I started with in <code>package.json</code>:</p>
+<pre><code>[some boilerplate...]
+"dependencies": {
+   "config": "0.4.15",
+   "express": "3.x",
+   "underscore": "1.3.3",
+   "deep-extend": "0.2.2",
+   "validator": "0.4.10",
+   "winston": "0.6.2"
+ },
+ "devDependencies": {
+   "coffee-script": "1.3.3",
+   "jshint": "0.7.1",
+   "coffeelint": "0.4.0"
+ }
+</code></pre>
+<p>Then just do:
+<code>$ npm install</code></p>
+</section>
+             <section class="slide">
+<h2>Modules</h2>
+<p>Require'ing is dead simple.</p>
+<pre><code>express = require('express')
+</code></pre>
+<p>Modules are just js files.</p>
+<pre><code>utils = require("./common/utils")
+</code></pre>
+</section>
+             <section class="slide">
+<h2>Dev Environment</h2>
+<ul>
+<li>Coffeescript: a must (for me).</li>
+</ul>
+<pre><code>// JavaScript             # CoffeeScript
+
+fn = function (args) {    fn = (args) ->
+  return args;              args
+};
+
+var obj = {               obj =
+  key: value                key: value
+};
+</pre>
+
+<p></code></p>
+<ul>
+<li>
+<p>Grunt: watch, test, server.</p>
+</li>
+<li>
+<p>REPL? Eh.</p>
+</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Config</h2>
+<p><code>node-config</code> provides per-environment config.</p>
+<p>In <code>project_root/config</code>:</p>
+<ul>
+<li><code>default.js</code>, <code>development.js</code>, <code>production.js</code></li>
+<li><code>node-config</code> chooses based on <code>NODE_ENV</code> environment variable.</li>
+</ul>
+<p>Sample:</p>
+<pre><code>config =
+  app:
+    addr: process.env.ADDRESS or "0.0.0.0"
+    port: process.env.PORT    or 8004
+  tts:
+    input:
+      maxChars: 200
+    languages:
+      available: ["en", "es"]
+
+module.exports = config
+</code></pre>
+</section>
+             <section class="slide">
+<h2>Connect and Express</h2>
+<p>Middleware (Connect) and HTTP framework (Express).</p>
+<p>Provides:</p>
+<ul>
+<li>Routes: <code>app.get('/audio', function(req, res) { ...</code></li>
+<li>Middleware: <code>middle = function(req, res, next) { ...</code></li>
+<li>Very flexible flow of control.</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Structure and Decomposition</h2>
+<p>Really up to you. Here's our project layout:</p>
+<pre><code>/cicero
+   |-config
+   |    |--default.js
+   |    |--development.js
+   |-docs
+   |-lib
+   |  |--server
+   |      |--index.js
+   |      |--tts.js
+   |-node_modules ...
+   |-src
+      |-config
+      |   |--default.coffee
+      |   |--development.coffee
+      |-server
+          |--index.coffee
+          |--tts.coffee
+</code></pre>
+</section>
+             <section class="slide">
+<h2>Structure and Decomposition</h2>
+<p><strong><code>index.(coffee|js)</code></strong></p>
+<ul>
+<li>docstring</li>
+<li>requires</li>
+<li>logger config</li>
+<li>app creation and config</li>
+<li>routing</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Structure and Decomposition</h2>
+<p><strong><code>tts.(coffee|js)</code></strong></p>
+<ul>
+<li>config</li>
+<li><code>TtsArgs</code></li>
+<li><code>TtsExec</code></li>
+<li><code>TtsCache</code></li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Structure and Decomposition</h2>
+<p>At bottom of <code>tts.(coffee|js)</code>, <code>Tts*</code> objects expose middleware: fns with
+signature <code>(req, res, next)</code>:</p>
+<pre><code>module.exports =
+  parseArgs:   TtsArgs.parse
+  searchCache: TtsCache.search
+  exec:        TtsExec.exec
+</code></pre>
+<p>In <code>index.(coffee|js)</code>:</p>
+<pre><code>tts = require "./tts"
+...
+
+middle = [log, tts.parseArgs, tts.searchCache, tts.exec]
+
+app.get "/audio", middle
+</code></pre>
+</section>
+             <section class="slide">
+<h2>Async</h2>
+<ul>
+<li>
+<p>I started doing fs operations with sync methods like <code>fs.openSync</code>.</p>
+</li>
+<li>
+<p>But why is that a problem?</p>
+</li>
+<li>
+<p>Node is single-threaded.</p>
+</li>
+<li>
+<p>Anything that blocks can halt the entire process.</p>
+</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Callbacks</h2>
+<p>First async paradigm.</p>
+<pre><code>fs.open path, 'r', (err, file) -&gt;
+  # Do something with file now that it's ready.
+</code></pre>
+</section>
+             <section class="slide">
+<h2>Events</h2>
+<p>Second async paradigam.</p>
+<pre><code># Create our process object.
+process = spawn TTS, args, options
+
+# Listen for error event.
+stderr = ""
+process.stderr.on "data", (data) -&gt;
+  # Accumulate data.
+  stderr += data
+
+# Listen for exit event.
+process.on "exit", (code) =&gt;
+  # Check errors, exit.
+  if stderr or code isnt 0
+    return new Error(stderr ? "TTS failed")
+</code></pre>
+</section>
+             <section class="slide">
+<h2>Streams</h2>
+<ul>
+<li>Streams are a powerful way of thinking about IO.</li>
+<li>Streams can be readable, writeable, or both.</li>
+<li>Can pipe readable into writeable.</li>
+<li>
+<p>Streams emit events:</p>
+<ul>
+<li>Readable: a bunch of <code>data</code> events and one <code>end</code> event</li>
+<li>Writeable: <code>drain</code>, <code>pipe</code>, <code>close</code> events</li>
+</ul>
+</li>
+</ul>
+<h3>Why use streams?</h3>
+<ul>
+<li>Data comes and goes as fast as the OS can make it available.</li>
+<li>Avoid 'procrastination', i.e., buffering data in memory. Send it as
+available/ready. Smooths out CPU and network load.</li>
+<li>Easy to reason about.</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Streams</h2>
+<p>Stream file to response (<code>res</code>) and S3 (<code>s3Stream</code>):</p>
+<pre><code># Get stream references to audio file and cloud (S3).
+fileStream = fs.createReadStream tmpMp3File
+s3Stream = getCloudStream(res)
+
+# Set response header.
+res.header 'Content-type', 'audio/mpeg'
+
+# Let the streaming begin!
+fileStream.pipe(res)
+tmpStream.pipe(s3Stream)
+
+# errHandle is defined elsewhere.
+fileStream.on "error", errHandle
+s3Stream.on "error", errHandle
+
+fileStream.on "end", -&gt;
+  # Do cleanup...
+</code></pre>
+</section>
+             <section class="slide">
+<h2>Logging and Monitoring</h2>
+<p>Get visibility into what your app is doing.</p>
+<ul>
+<li>
+<p>winston library</p>
+<ul>
+<li>Allows multiple transports (e.g., console, filesystem, third-party service)</li>
+<li>Logs JSON
+<pre><code>{
+  "date": "2012-10-28T15:17:02.513Z",
+  "level": "info",
+  "env": "production,
+  "type": "server",
+  "serverHost": "inkling",
+  "serverId": "m",
+  "serverPid": 99632,
+  "serverName": "prod-server",
+  "addr": "0.0.0.0",
+  "port": 2003,
+  "vers": "v0.8.9",
+  "deploy": "cicero",
+  "message": "Server started on port 2003."
+}
+</code></pre></li>
+</ul>
+</li>
+<li>
+<p>Monitoring services can read the logs, too.</p>
+</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Provision and Deploy</h2>
+<ul>
+<li>Many ways you could do this.</li>
+<li>We use Chef and AWS.</li>
+<li>Find Chef cookbooks online and customize when necessary.</li>
+<li>Time to deploy? Update version and Chef takes of the rest.</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Monitoring</h2>
+<ul>
+<li>Again, many ways to do this.</li>
+<li>We use a service called Scout.</li>
+<li>Scans output from logging.</li>
+</ul>
+<p><img src='scout_screenshot.png'></p>
+</section>
+             <section class="slide">
+<h2>Challenges</h2>
+<ul>
+<li>Thinking async.</li>
+<li>Newness/rapid development.</li>
+<li>DIY / FIOY (figure it out yourself).</li>
+<li>Minimalism sometimes extends to docs!</li>
+</ul>
+</section>
+             <section class="slide">
+<h2>Links</h2>
+<h4>Docs</h4>
+<ul>
+<li>Node docs: <a href="http://nodejs.org/api">nodejs.org/api</a> (Make sure to get right version, Google is often behind!)</li>
+<li>Express docs: <a href="http://expressjs.com">expressjs.com</a> 
+</ul>
+<h4>Community</h4>
+<ul>
+<li>Nodejitsu: <a href="http://docs.nodejitsu.com">docs.nodejitsu.com</a> 
+<li>How to Node: <a href="http://howtonode.org">howtonode.org</a> 
+</ul>
+<h4>Chef</h4>
+<ul>
+<li>nodejs cookbook: <a href="http://community.opscode.com/cookbooks/nodejs">community.opscode.com/cookbooks/nodejs</a> 
+<li>node app cookbook: <a href="http://community.opscode.com/cookbooks/node">community.opscode.com/cookbooks/node</a> 
+</ul>
+</section>
+             <section class="slide">
+<h2>Thanks!</h2>
+<p>@williamjohnbert</p>
+<p>http://williamjohnbert.com</p>
+<p>SpanishDict is hiring! http://spanishdict.com/careers</p></section>
+<!-- Begin extension snippets. Add or remove as needed. -->
+
+<!-- deck.navigation snippet -->
+<a href="#" class="deck-prev-link" title="Previous">&#8592;</a>
+<a href="#" class="deck-next-link" title="Next">&#8594;</a>
+
+<!-- deck.status snippet -->
+<p class="deck-status">
+	<span class="deck-status-current"></span>
+	/
+	<span class="deck-status-total"></span>
+</p>
+
+<!-- deck.goto snippet -->
+<form action="." method="get" class="goto-form">
+	<label for="goto-slide">Go to slide:</label>
+	<input type="text" name="slidenum" id="goto-slide" list="goto-datalist">
+	<datalist id="goto-datalist"></datalist>
+	<input type="submit" value="Go">
+</form>
+
+<!-- deck.hash snippet -->
+<a href="." title="Permalink to this slide" class="deck-permalink">#</a>
+
+<!-- End extension snippets. -->
+
+
+<!-- Required JS files. -->
+<script src="jquery-1.7.2.min.js"></script>
+<script src="core/deck.core.js"></script>
+
+<!-- Extension JS files. Add or remove as needed. -->
+<script src="./core/deck.core.js"></script>
+<script src="./extensions/hash/deck.hash.js"></script>
+<script src="./extensions/menu/deck.menu.js"></script>
+<script src="./extensions/goto/deck.goto.js"></script>
+<script src="./extensions/status/deck.status.js"></script>
+<script src="./extensions/navigation/deck.navigation.js"></script>
+<script src="./extensions/scale/deck.scale.js"></script>
+<script src="./extensions/markdown/Markdown.Converter.js"></script>
+<script src="./extensions/markdown/deck.markdown.js"></script>
+
+<!-- Initialize the deck. You can put this in an external file if desired. -->
+<script>
+	$(function() {
+		$.deck('.slide');
+	});
+</script>
+</body>
+</html>
