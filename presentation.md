@@ -333,7 +333,7 @@ Get visibility into what your app is doing.
 <pre><code>{
   "date": "2012-10-28T15:17:02.513Z",
   "level": "info",
-  "env": "production,
+  "env": "production",
   "type": "server",
   "serverHost": "inkling",
   "serverId": "m",
@@ -366,7 +366,7 @@ Get visibility into what your app is doing.
 * We use a service called Scout.
 * Scans output from logging.
 
-<img src='scout_screenshot.png'>
+<img src='deck/img/scout.png'>
 
 * * * * *
 
