@@ -62,10 +62,11 @@ Zero to Node: Node.js in Production
 
 Install is easy enough...
 
-    $ brew install node
-    $ git clone git://github.com/creationix/nvm.git ~/nvm
-    $ . ~/nvm/nvm.sh
-    $ nvm use v0.8.9
+<pre>$ brew install node
+$ git clone git://github.com/creationix/nvm.git ~/nvm
+$ . ~/nvm/nvm.sh
+$ nvm use v0.8.9
+</pre>
 
 Check nodejs.org for other platforms.
 
@@ -77,7 +78,7 @@ Node has **lots** of third-party packages.
 
 Here's what I started with in `package.json`:
 
-    [some boilerplate...]
+    # [some boilerplate...]
     "dependencies": {
        "config": "0.4.15",
        "express": "3.x",
@@ -93,7 +94,8 @@ Here's what I started with in `package.json`:
      }
 
 Then just do:
-`$ npm install`
+
+    $ npm install
 
 * * * * *
 
@@ -101,7 +103,7 @@ Then just do:
 
 Require'ing is dead simple.
 
-    express = require('express')
+    express = require("express")
 
 Modules are just js files.
 
@@ -113,14 +115,14 @@ Modules are just js files.
 
 * Coffeescript: a must (for me).
 
-<pre><code>// JavaScript             # CoffeeScript
+<pre><code class="javascript">// JavaScript               # CoffeeScript
 
-fn = function (args) {    fn = (args) ->
-  return args;              args
+fn = function (args) {      fn = (args) ->
+  return args;                args
 };
 
-var obj = {               obj =
-  key: value                key: value
+var obj = {                 obj =
+  key: value                  key: value
 };
 </code>
 </pre>
@@ -163,8 +165,19 @@ Middleware (Connect) and HTTP framework (Express).
 
 Provides:
 
-* Routes: `app.get('/audio', function(req, res) { ...`
-* Middleware: `middle = function(req, res, next) { ...`
+* Routes:
+
+<pre><code class="coffeescript">app.get '/audio', (req, res) ->
+   # Do route callback.
+</code></pre>
+
+* Middleware:
+
+<pre><code class="coffeescript">middle = (req, res, next) ->
+   # Process req, res. Call next.
+   next()
+</code></pre>
+
 * Very flexible flow of control.
 
 * * * * *
@@ -222,20 +235,21 @@ Really up to you. Here's our project layout:
 At bottom of `tts.(coffee|js)`, `Tts*` objects expose middleware: fns with
 signature `(req, res, next)`:
 
-    module.exports =
-      parseArgs:   TtsArgs.parse
-      searchCache: TtsCache.search
-      exec:        TtsExec.exec
-
+<pre><code class="coffeescript">module.exports =
+  parseArgs:   TtsArgs.parse
+  searchCache: TtsCache.search
+  exec:        TtsExec.exec
+</code></pre>
 
 In `index.(coffee|js)`:
 
-    tts = require "./tts"
-    ...
+<pre><code class="coffeescript">tts = require "./tts"
+# ...
 
-    middle = [log, tts.parseArgs, tts.searchCache, tts.exec]
-    
-    app.get "/audio", middle
+middle = [log, tts.parseArgs, tts.searchCache, tts.exec]
+
+app.get "/audio", middle
+</code></pre>
 
 * * * * *
 
@@ -255,9 +269,9 @@ In `index.(coffee|js)`:
 
 First async paradigm.
 
-    fs.open path, 'r', (err, file) ->
-      # Do something with file now that it's ready.
-
+<pre><code class="coffeescript">fs.open path, 'r', (err, file) ->
+  # Do something with file now that it's ready.
+</code></pre>
 * * * * *
 
 ## Events
@@ -274,7 +288,7 @@ Second async paradigam.
       stderr += data
 
     # Listen for exit event.
-    process.on "exit", (code) =>
+    process.on "exit", (code) ->
       # Check errors, exit.
       if stderr or code isnt 0
         return new Error(stderr ? "TTS failed")
@@ -304,23 +318,24 @@ available/ready. Smooths out CPU and network load.
 
 Stream file to response (`res`) and S3 (`s3Stream`):
 
-    # Get stream references to audio file and cloud (S3).
-    fileStream = fs.createReadStream tmpMp3File
-    s3Stream = getCloudStream(res)
+<pre><code class="coffeescript"># Get stream references to audio file and cloud (S3).
+fileStream = fs.createReadStream tmpMp3File
+s3Stream = getCloudStream(res)
 
-    # Set response header.
-    res.header 'Content-type', 'audio/mpeg'
+# Set response header.
+res.header 'Content-type', 'audio/mpeg'
 
-    # Let the streaming begin!
-    fileStream.pipe(res)
-    tmpStream.pipe(s3Stream)
+# Let the streaming begin!
+fileStream.pipe(res)
+tmpStream.pipe(s3Stream)
 
-    # errHandle is defined elsewhere.
-    fileStream.on "error", errHandle
-    s3Stream.on "error", errHandle
+# errHandle is defined elsewhere.
+fileStream.on "error", errHandle
+s3Stream.on "error", errHandle
 
-    fileStream.on "end", ->
-      # Do cleanup...
+fileStream.on "end", ->
+  # Do cleanup...
+</code></pre>
 
 * * * * *
 
