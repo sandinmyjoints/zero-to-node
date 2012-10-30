@@ -7,6 +7,7 @@ http://audio1.spanishdict.com/audio?lang=es&speed=25&text=fant%C3%A1stico
 
 * Thanks for coming. My talk is titled Zero to Node.
 * A case study of deploying node.js in production.
+* I'm William Bert, a software engineer at SpanishDict. I joined in August.
 
 ## Slide 2 - Goal
 
