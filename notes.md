@@ -1,20 +1,22 @@
 ## Prep
 
-* Audio sample to play: search fantastico or node
-http://audio1.spanishdict.com/audio?lang=es&speed=25&text=fant%C3%A1stico
+* Audio sample to play: fantastico, java script
 
 ## Slide 1 - Title
 
-* Thanks for coming. My talk is titled Zero to Node.
-* A case study of deploying node.js in production.
+* Hi, thanks for coming. 
 * I'm William Bert, a software engineer at SpanishDict. I joined in August.
+* My talk is titled Zero to Node. It's a case study of deploying node.js in
+  production based on a project I worked on in my first month here.
 
 ## Slide 2 - Goal
 
-* My goal is to describe what it was to begin with node, and get a service into
-production.
-* In particular, I came from a Python background, though this should hopefully
-  be generally applicable.
+* My goal is to describe what it was like to begin with node, and get a service
+into production
+* I hope to help others who are interested in Node to do something similar.
+* My background: I worked mostly with Python and Django previously, though this
+  presentation should hopefully be generally applicable to anyone interested in
+  node.
 * A quick disclaimer: I'm not a node expert. I'm still learning. My experience
   is fairly limited.
 * If you're looking for expert advice, I might not be able to help, but the
@@ -22,65 +24,68 @@ production.
 
 ## Slide 3 - The Problem
 
-* SpanishDict.com is an English-Spanish language learning
-website. Part of teaching language is teaching pronunciation.
-* Pronunciation can be taught by hearing words.
-* Users are arbitrary. Want to hear how to pronounce the words they want to
-  know!
-* We have a text to speech product that actually does a pretty good job of
-pronouncing arbitrary Spanish and English text (play sample).
-* The TTS application is enterprise software that only runs on the
-command line, but our old PHP app is broken.
-* So we need to take user input and serve up audio quickly (very quickly) and
-efficiently.
-* This isn't a core service, but a nice add-on.
-* We just want to forget about it. We want stability, relatively low resources,
-simplicity so easy to maintain.
-* We'll serve between 100-1000 requests/minute.
+* SpanishDict.com is an English-Spanish language learning website. Part of
+teaching language is teaching pronunciation. Pronunciation is taught by hearing
+words pronounced correctly.
+* Users are arbitrary--they want to hear how to pronounce whatever words they
+  want to learn!
+* We have a text to speech (TTS) product that actually does a pretty good job of
+pronouncing arbitrary Spanish and English text (play samples).
+* The TTS application is enterprise software that only runs on the command line,
+but our old PHP app is not working well and not worth repairing.
 
 ## Slide 4 - The Solution
 
-* The solution is a node app.
-* Ryan and Chris assert it can do this. I say OK.
-* We have experience (within the team) with Node. We use a lot of node here.
+* The solution is (you may have guessed) a node app.
+* Ryan and Chris assert it can do this. I say, OK.
+* The team has experience with Node. We use a lot of node here:
 * We use it for making user input suggestions, providing translations,
-connecting to the database. It has worked well for us so far.
+connecting to the database backend. It has worked well for us so far.
 * Ryan did all those, and now he's got a new guy who needs to get up to
 speed. So the new guy--me--can do it.
-* Thus is born Cicero.
+* Thus is born Cicero, the name we gave to our application.
 
 ## Slide 5 - Yikes!
 
 * This is my internal reaction.
 * Lots of users!
-* New language, and framework! 
-* New to Node! Learning curve. Javascript. Coffescript!
+* New stack and framework!
 * Async!
+* New to server-side Node! Learning curve. 
 * Where to start? Hopefully my experience can help you.
 
 ## Slide 6 - What's this app really doing
 
 * Taking in a string and
 
-    * serving from cache, or
-    * generating an mp3, serving to user, and caching
+    * serving audio from cache, or
+    * generating audio, serving to user, and caching
     
 * In other words, **slinging data**. Node can do that really well.
-* At least the problem is well understood.
+* We need to serve the audio quickly (very quickly) and efficiently.
+* This isn't a core service, but a nice add-on.
+* We just want to forget about it. We want stability, relatively low resources,
+simplicity so easy to maintain.
+* We'll serve ~500 requests/minute.
+* So now the problem is well understood.
 
 ## Slide 7 - Getting started
 
-* Install is easy (see slide).
-* `nvm` is node version manager, so you can have multiple node versions. newer
-  ones available all the time. Try out new versions, switch when ready.
+* Install is easy on any platform. Here's how to do it on OS X with Homebrew
+  (see slide).
+* We installed `nvm`, node version manager, which allows you to have
+  multiple node versions installed at once. This is useful because node is
+  updated all the time.
+* This way, you can try out new versions and switch when ready. Different apps
+  can use different versions.
 * We're going into production, so there's a little more to installation than
   just this.
 
 ## Slide 8 - Dependencies
 
 * Node has **lots** of third-party packages.
-* We'll use npm to install some packages out of the gate to get the most out of
-  node. We'll talk about what they do in a minute.
+* We used Node package manager (npm) to install some packages out of the gate
+  to get the most out of node. We'll talk about what they do in a minute.
 * Npm is dead simple. 
 * Put a list of packages and versions in `package.json` (see docs for
   boilerplate).
@@ -89,16 +94,22 @@ speed. So the new guy--me--can do it.
 
 ## Slide 9 - Modules
 
-* Require'ing is dead simple. 
-* In Common JS, Modules are just js files. So we can import express like this.
+* Now that our third-party packages are installed, how do we use them in our
+  code? We require them in as modules.
+* Node uses a specification called Common JS that allows us to import Javascript
+  files as modules.
+* Require'ing is dead simple. Since modules are just js files, we can import,
+  for example, `express` like this.
 * Since they're just just js files, we can import our own code too (see slide).
 
 ## Slide 10 - Dev Env
 
 * I'll briefly describe my dev environment.
 * Coffescript is really "the best parts of Javascript". Protects you from
-  tripping on some gotchas. Looks better, more readable, significant
-  whitespace. It reminds me of Python. Also hear it's like Ruby.
+  tripping on some gotchas like global variables, semicolon insertion, weird
+  type coercion.
+* Coffescript looks better, more readable, significant whitespace. It reminds me
+  of Python. Also hear it's like Ruby.
 * Quick CS explanation (see slide)
 * My examples are in CS. Ask if anything is unclear about it.
 * Grunt: Command line dev tool. Very useful for tasks: watch, test, server. Like
@@ -108,46 +119,46 @@ speed. So the new guy--me--can do it.
 
 ## Slide 11 - Config
 
-* `node-config` is a module we installed above.
+* `node-config` is one of the modules we installed above.
 * It provides runtime configuration control for node deployments.
 * Define config files per environment. (see slide)
 
-## Slide 12 - Express
-
+## Slide 12 - Connect and Express
 
 * Express is a node HTTP framework built on Connect, which is a middleware
   framework.
 * They're so much part of my node experience that I almost forget they are their own
-  things.
-* They provide routes and middleware (see slide).
+  things because they provide essentials: routes and middleware (see slide).
 * Deceivingly simple, extremely flexible.
-* Think in terms of middleware. Pass requests through chain of
+* Think mostly in terms of middleware. Pass requests through chain of
   middleware. Middleware are functions that take req, res, do something, and
   call the next middleware function.
 * Example: logging. You get a request to '/audio', pass to log middleware first,
   it logs the request, then passes to next, which parses the query string
   parameters, then next, etc.
+* We can send some routes through some middleware, like auth, but others will go
+  through different middleware.
 
 ## Slide 13 - Structure and Decomposition - Project layout
 
 * Node is ripe for structuring. It's up to you.
-* So here's what we do: config, docs, lib holds compiled javascript,
-  node_modules are installed modules, and src holds coffeescript.
-* grunt, package.json, server.js are in root.
-* grunt compiles from src into lib.
-* Notice index.coffee and tts.coffee. Main source.
-* At first I put everything in one file. It worked. It's that simple. 
-* It wasn't a terribly long file, but better to structure.
-* But how? In Django, you have resuable apps that have models.py and urls.py and
-  views.py, etc. None of that here!
-* Everything is so lightweight, it's up to you. It's preferences, not dictated.
-* Ryan sat me down and we broke them up. Used Coffescript classes (really js
-  objects with constructor functions).
+* So here's what we do:
+* I'm going to skip to the source directory  (see slide)
+* index.coffee and tts.coffee are the main source.
+* grunt compiles from src/server into lib, from src/config into config.
+* (If you're just writing javascript, you don't need to src directory.)
 
 ## Slide 14 - S and D - Index
 
-* Index holds mostly sort of boilerplate-y stuff (see slide).
-* But it's important: it ensures you'll get logging and your routes will work
+* At first I put all my code in one file. It worked. 
+* It wasn't a terribly long file, but it's better to structure for long-term
+  readability and maintenance.
+* But how? In Django, you have resuable apps that have models.py and urls.py and
+  views.py, etc. None of that here!
+* Everything is so flexible, so it's up to you. It's preferences, not dictated.
+* Ryan sat me down and we broke them up. 
+* First: index. Index holds mostly sort of boilerplate-y stuff (see slide).
+* But it's important: it ensures you'll get logging and your routes will work.
 * Separate from app logic.
 
 ## Slide 15 - S and D  - Tts
@@ -155,9 +166,12 @@ speed. So the new guy--me--can do it.
 * config: Read runtime config from files
 * Then structure by function: it's all exposed as middleware. We're free to
   break up within the code as we see fit
+* For these, we used Coffescript classes basically as namespaces, just js
+  objects that encapsulate related code. 
 * TtsArgs: Process the arguments from query string params to command line flags
 * TtsExec: Spawn the process and get its results
-* TtsCache: Look for user text in cache. Stores if it's not there.
+* TtsCache: Look for audio for particular user input in cache. Serve it if it's
+  there, otherwise store it.
 
 ## Slide 16 - S and D - How to use as middleware
 

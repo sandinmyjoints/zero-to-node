@@ -5,13 +5,9 @@ Zero to Node: Node.js in Production
 * * * * *
 
 ## Goal
-### Show one way to do Node.
+### Describe how we did a particular project in Node.
 
-* There are many. This was ours.
-
-* Full Disclosure: I'm still learning.
-
-* For expert advice, the internet is your best bet.
+* Hopefully helpful to others who want to work with Node.
 
 * * * * *
 
@@ -21,7 +17,7 @@ Zero to Node: Node.js in Production
 
 * Users want to learn how to pronounce arbitrary text.
 
-* We have a command-line TTS application.
+* We have a command-line text-to-speech (TTS) application.
 
 * But our legacy PHP app to generate audio is broken.
 
@@ -47,28 +43,32 @@ Zero to Node: Node.js in Production
 
 * * * * *
 
-## What's This App Really Doing?
+## What's this app really doing?
 
 * Taking in a string and:
 
-    * serving from cache, or
-    * generating an mp3, serving to user, and caching
+    * serving audio from cache, or
+    * generating audio, serving to user, and saving in cache
 
 * In other words, **slinging data**. Node can do that really well.
+
+* It needs to be quick and stable.
+
+* Serve ~500 requests/minute.
 
 * * * * *
 
 ## Getting started
 
-Install is easy enough...
+Install is easy. Check nodejs.org for instructions.
 
-<pre>$ brew install node
-$ git clone git://github.com/creationix/nvm.git ~/nvm
-$ . ~/nvm/nvm.sh
-$ nvm use v0.8.9
-</pre>
+On OS X, using Homebrew:
 
-Check nodejs.org for other platforms.
+<pre>$ brew install node</pre>
+
+Recommended: Install NVM (node version manager).
+
+Allows multiple versions of Node to be installed at once.
 
 * * * * *
 
@@ -93,7 +93,7 @@ Here's what I started with in `package.json`:
        "coffeelint": "0.4.0"
      }
 
-Then just do:
+Then use Node package manager (NPM) to install:
 
     $ npm install
 
@@ -101,13 +101,15 @@ Then just do:
 
 ## Modules
 
-Require'ing is dead simple.
+`require` allows importing third-party packages into our code.
 
-    express = require("express")
+`require`'ing is dead simple.
+
+    express = require "express"
 
 Modules are just js files.
 
-    utils = require("./common/utils")
+    utils = require "./common/utils"
 
 * * * * *
 
@@ -145,17 +147,15 @@ In `project_root/config`:
 
 Sample:
 
-    config =
+    module.exports =
       app:
-        addr: process.env.ADDRESS or "0.0.0.0"
-        port: process.env.PORT    or 8004
+        addr: "0.0.0.0"
+        port: 8004
       tts:
         input:
           maxChars: 200
         languages:
           available: ["en", "es"]
-
-    module.exports = config
 
 * * * * *
 
@@ -167,7 +167,8 @@ Provides:
 
 * Routes:
 
-<pre><code class="coffeescript">app.get '/audio', (req, res) ->
+<pre><code class="coffeescript">app = express()
+app.get '/audio', (req, res) ->
    # Do route callback.
 </code></pre>
 
