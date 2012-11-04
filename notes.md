@@ -170,8 +170,8 @@ simplicity so easy to maintain.
   objects that encapsulate related code. 
 * TtsArgs: Process the arguments from query string params to command line flags
 * TtsExec: Spawn the process and get its results
-* TtsCache: Look for audio for particular user input in cache. Serve it if it's
-  there, otherwise store it.
+* TtsCache: Look for audio mp3 for some particular user input in cache. Serve it
+  if it's there, otherwise store it.
 
 ## Slide 16 - S and D - How to use as middleware
 
@@ -186,9 +186,10 @@ simplicity so easy to maintain.
 
 * I looked at some early commits and found sync methods.
 * Sync is a problem because Node is single-threaded, so one blocking call can
-halt everything.
-* Node is designed for async, everything supports, and async works well in
-  practice for web apps, so you should use it.
+halt everything in the entire Node process.
+* Node is designed for async, everything in the std lib and the ecosystem
+  supports async, and async works well in practice for web apps, so I wanted to
+  be sure to use it.
 * Async: I understood it in theory, but had limited exposure in practice.
 
 ## Slide 18 - Callbacks
@@ -196,23 +197,28 @@ halt everything.
 * First async paradigm: callback functions.
 * They are functions that are called once something is ready. In other words,
   they are deferred execution.
-* Essential to async.
+* They are kind of the building blocks of Node async.
 * This example shows how to open a file.
-* The flow is fairly straightfoward: start this operation, and when it's done,
-  execute this code.
+* The flow is fairly straightfoward: start this operation, keep going with
+  whatever comes next, but when this operation is done, execute this code.
 
 ## Slide 19 - Events
 
-* Events are another async paradigm you might encounter.
-* Node has an event loop.
-* Each trip around it is a tick. During a tick, code executes.
-* So we schedule callbacks for I/O tasks: network input, filesystem calls
-* On a trip around event loop: node asks, is it time to fire callback 1?
-  callback 2? etc.
+* Events are the next async paradigm I encountered.
+* Events are like arbitrary callbacks--an event emitter object can emit them
+  whenever some condition occurs, like receiving data, or encountering an error.
 * (see slide) We create the process object, init stderr, and register the event
-  handlers is all done synchronously one one tick.
-* On subsequent ticks, if proc has triggered on or exit events, the cbs execute
-  (synchronously inside each)
+  handlers, all synchronously within one 'tick'.
+* A 'tick' is one trip around the event loop. Node is continuously running this
+  event loop, and on each trip around event loop: node asks, is it time to fire
+  this callback? execute this event handler? etc.
+* So on subsequent ticks, if our process has triggered 'data' or 'exit' events,
+  the cbs execute (synchronously inside each)
+* Using this event loop/async event paradigm mean node effectively never blocks;
+  it only executes code when the condition that code is supposed to handle has
+  occurred. This is especially useful for I/O bound applications like HTTP
+  servers: we don't block for network input or filesystem operations while
+  complete; they can run and node is free to keep serving requests.
 
 ## Slide 20 - Streams
 
@@ -224,9 +230,8 @@ halt everything.
 * Can be readable, writeable, both. Can pipe readable into writeable.
 * Listen for events. Handle end and error events, particularly. (Example coming)
 * Why use streams?
-* Data comes and goes as fast as the OS can make it available.
 * Avoid 'procrastination', i.e., buffering data in memory. Send it as
-available/ready. Smooths out CPU and network load.
+available/ready from the OS. Smooths out CPU and network load.
 * Easy to reason about.
 
 ## Slide 21 - Stream example
@@ -237,14 +242,16 @@ available/ready. Smooths out CPU and network load.
 * Ideal would be to stream directly from the TTS application without touching the
 filesystem, but the application is picky and uncooperative.
 
-## Slide 22 - Logging and Monitoring
+## Slide 22 - Logging 
 
 * Logging allows you visibility into what your app is doing.
+* This is very important for production deployment so you know the app is
+  working correctly, or if it breaks, you know what is going wrong.
 * We use a library called Winston for logging.
 * Configure multiple transports: 
 * log to console in dev.
 * log to filesystem and a service (e.g., Loggly) in production.
-* It outputs JSON. 
+* It outputs JSON instead of a big string blob.
 * We can data mine these logs later for diagnosing any problems, or also for
   business value, say, what kinds of words or phrases do people tend to want to
   pronounce?
@@ -252,35 +259,59 @@ filesystem, but the application is picky and uncooperative.
 ## Slide 23 - Deployment/Chef/AWS
 
 * There are many ways you could do this. It's a big topic.
-* We use Chef for provisioning and deployment.
-* AWS is our IAAS provider. Raw machines to use.
-* To use Chef, download cookbooks and customize, or write your own when neceesary.
+* We use Chef for provisioning and deployment. Chef is "an open-source systems
+  integration framework built specifically for automating the cloud."
+* That means we can control our servers through code. 
+* We write cookbooks that describe how to configure machines, then Chef executes
+  those cookbooks and actually configures machines.
+* AWS is our IAAS provider. They give us raw machines to use. Chef is how we
+  control them.
+* A lot of kinds of Chef cookbooks are available online. You can use the off the
+  shelf or customize them fairly easily.
 * Ryan wrote our general node webapp cookbook.
 * I wrote a tts webapp cookbook which extends that for cicero.
-* Can use Chef to start, stop, deploy your app.
-* Can spin up new instances quickly.
+* Once the cookbook is written, we can use Chef to start, stop, and deploy our
+  app with one or two commands. Quick and convenient.
 
-## Slide 24 - Challenges
+## Slide 24 - Monitoring
 
-* Async means wrapping your head around a new kind of flow control. Debug is a
-  little messier, but tolerable.
-* Newness and rapid development mean best practice aren't always well known, and change
-  frequently. Need to keep up with the community.
+* In production, you can't read the voluminous logs, so monitoring aggregates
+  the logs and gives even better visibility into your app's operation.
+* Again, there are many ways to do this.
+* We use a service called Scout.
+* It simple scans output from logging, and produces realtime charts like this.
+* We configure alerts so that if the number of requests drops below a threshold,
+  or the amount of memory used goes above a threshold, we get emails or texts.
+
+<img src='deck/img/scout.png'>
+
+
+## Slide 25 - Challenges
+
+* Async means wrapping your head around a new kind of flow control if you're
+  used to sync. Debug is a little messier, but tolerable.
+* Newness and rapid development mean best practices aren't always well known,
+  and change frequently. Need to keep up with the community.
 * Seems to be a DIY/FIOY attitude, which you may like or not, depending on your
-  temperment and your task.
-* Minimalism of node/express sometimes extends to docs.  Aesthetically pleasing,
+  temperment, your task, and your deadlines.
+* Minimalism of node/express sometimes extends to docs. Aesthetically pleasing,
   but frustrating when you're trying to understand something. Always good to
   look at source.
 
 ## Slide 25 - Links
 
 * Official
-* Node docs -- make sure to get right version, Google is behind
+    * Node docs -- make sure to get right version, Google is behind
+    * Express
 * Community
     * Nodejitsu is a PAAS provider that has a good community site.
+    * How to Node
 * Other
+    * Coffee-script
 
 ## Slide 26 - Thanks and Questions
 
 * Thanks!
+* Quick note: If this sounded interesting, SpanishDict is hiring. Talk to me,
+  Chris, or Ryan.
 * Questions?

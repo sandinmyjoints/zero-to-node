@@ -41,17 +41,9 @@
 </section>
              <section class="slide">
 <h2>Goal</h2>
-<h3>Show one way to do Node.</h3>
+<h3>Describe how we did a particular project in Node.</h3>
 <ul>
-<li>
-<p>There are many. This was ours.</p>
-</li>
-<li>
-<p>Full Disclosure: I'm still learning.</p>
-</li>
-<li>
-<p>For expert advice, the internet is your best bet.</p>
-</li>
+<li>Hopefully helpful to others who want to work with Node.</li>
 </ul>
 </section>
              <section class="slide">
@@ -64,7 +56,7 @@
 <p>Users want to learn how to pronounce arbitrary text.</p>
 </li>
 <li>
-<p>We have a command-line TTS application.</p>
+<p>We have a command-line text-to-speech (TTS) application.</p>
 </li>
 <li>
 <p>But our legacy PHP app to generate audio is broken.</p>
@@ -95,30 +87,34 @@
 </ul>
 </section>
              <section class="slide">
-<h2>What's This App Really Doing?</h2>
+<h2>What's this app really doing?</h2>
 <ul>
 <li>
 <p>Taking in a string and:</p>
 <ul>
-<li>serving from cache, or</li>
-<li>generating an mp3, serving to user, and caching</li>
+<li>serving audio from cache, or</li>
+<li>generating audio, serving to user, and saving in cache</li>
 </ul>
 </li>
 <li>
 <p>In other words, <strong>slinging data</strong>. Node can do that really well.</p>
 </li>
+<li>
+<p>It needs to be quick and stable.</p>
+</li>
+<li>
+<p>Serve ~500 requests/minute.</p>
+</li>
 </ul>
 </section>
              <section class="slide">
 <h2>Getting started</h2>
-<p>Install is easy enough...</p>
-<pre>$ brew install node
-$ git clone git://github.com/creationix/nvm.git ~/nvm
-$ . ~/nvm/nvm.sh
-$ nvm use v0.8.9
-</pre>
+<p>Install is easy. Check nodejs.org for instructions.</p>
+<p>On OS X, using Homebrew:</p>
+<pre>$ brew install node</pre>
 
-<p>Check nodejs.org for other platforms.</p>
+<p>Recommended: Install NVM (node version manager).</p>
+<p>Allows multiple versions of Node to be installed at once.</p>
 </section>
              <section class="slide">
 <h2>Dependencies</h2>
@@ -139,17 +135,18 @@ $ nvm use v0.8.9
    "coffeelint": "0.4.0"
  }
 </code></pre>
-<p>Then just do:</p>
+<p>Then use Node package manager (NPM) to install:</p>
 <pre><code>$ npm install
 </code></pre>
 </section>
              <section class="slide">
 <h2>Modules</h2>
-<p>Require'ing is dead simple.</p>
-<pre><code>express = require("express")
+<p><code>require</code> allows importing third-party packages into our code.</p>
+<p><code>require</code>'ing is dead simple.</p>
+<pre><code>express = require "express"
 </code></pre>
 <p>Modules are just js files.</p>
-<pre><code>utils = require("./common/utils")
+<pre><code>utils = require "./common/utils"
 </code></pre>
 </section>
              <section class="slide">
@@ -187,17 +184,15 @@ var obj = {                 obj =
 <li><code>node-config</code> chooses based on <code>NODE_ENV</code> environment variable.</li>
 </ul>
 <p>Sample:</p>
-<pre><code>config =
+<pre><code>module.exports =
   app:
-    addr: process.env.ADDRESS or "0.0.0.0"
-    port: process.env.PORT    or 8004
+    addr: "0.0.0.0"
+    port: 8004
   tts:
     input:
       maxChars: 200
     languages:
       available: ["en", "es"]
-
-module.exports = config
 </code></pre>
 </section>
              <section class="slide">
@@ -207,7 +202,8 @@ module.exports = config
 <ul>
 <li>Routes:</li>
 </ul>
-<pre><code class="coffeescript">app.get '/audio', (req, res) ->
+<pre><code class="coffeescript">app = express()
+app.get '/audio', (req, res) ->
    # Do route callback.
 </code></pre>
 
@@ -354,30 +350,26 @@ available/ready. Smooths out CPU and network load.</li>
 </section>
              <section class="slide">
 <h2>Streams</h2>
-<p>Stream file to response (<code>res</code>) and S3 (<code>s3Stream</code>):</p>
-<pre><code class="coffeescript"># Get stream references to audio file and cloud (S3).
-fileStream = fs.createReadStream tmpMp3File
-s3Stream = getCloudStream(res)
-
-# Set response header.
-res.header 'Content-type', 'audio/mpeg'
+<p>Stream audio file to HTTP response (<code>res</code>) and S3 cache (<code>s3Stream</code>):</p>
+<pre><code class="coffeescript"># Get stream references to audio file and S3.
+fileStream = fs.createReadStream tmpAudioFile
+s3Stream = getCloudStream(res)  # getCloudStream defined elsewhere.
 
 # Let the streaming begin!
 fileStream.pipe(res)
 tmpStream.pipe(s3Stream)
 
-# errHandle is defined elsewhere.
 fileStream.on "error", errHandle
 s3Stream.on "error", errHandle
 
 fileStream.on "end", ->
-  # Do cleanup...
+  # Do cleanup (delete tmpAudioFile)
 </code></pre>
 
 </section>
              <section class="slide">
-<h2>Logging and Monitoring</h2>
-<p>Get visibility into what your app is doing.</p>
+<h2>Logging</h2>
+<p>Gain visibility into what your app is doing.</p>
 <ul>
 <li>
 <p>winston library</p>
@@ -445,6 +437,10 @@ fileStream.on "end", ->
 <ul>
 <li>Nodejitsu: <a href="http://docs.nodejitsu.com">docs.nodejitsu.com</a></li>
 <li>How to Node: <a href="http://howtonode.org">howtonode.org</a></li>
+</ul>
+<h4>Coffee-script</h4>
+<ul>
+<li><a href="http://coffeescript.org/">coffeescript.org/</a></li>
 </ul>
 <h4>Chef</h4>
 <ul>

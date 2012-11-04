@@ -317,32 +317,28 @@ available/ready. Smooths out CPU and network load.
 
 ## Streams
 
-Stream file to response (`res`) and S3 (`s3Stream`):
+Stream audio file to HTTP response (`res`) and S3 cache (`s3Stream`):
 
-<pre><code class="coffeescript"># Get stream references to audio file and cloud (S3).
-fileStream = fs.createReadStream tmpMp3File
-s3Stream = getCloudStream(res)
-
-# Set response header.
-res.header 'Content-type', 'audio/mpeg'
+<pre><code class="coffeescript"># Get stream references to audio file and S3.
+fileStream = fs.createReadStream tmpAudioFile
+s3Stream = getCloudStream(res)  # getCloudStream defined elsewhere.
 
 # Let the streaming begin!
 fileStream.pipe(res)
 tmpStream.pipe(s3Stream)
 
-# errHandle is defined elsewhere.
 fileStream.on "error", errHandle
 s3Stream.on "error", errHandle
 
 fileStream.on "end", ->
-  # Do cleanup...
+  # Do cleanup (delete tmpAudioFile)
 </code></pre>
 
 * * * * *
 
-## Logging and Monitoring
+## Logging
 
-Get visibility into what your app is doing.
+Gain visibility into what your app is doing.
 
 * winston library
     * Allows multiple transports (e.g., console, filesystem, third-party service)
@@ -405,6 +401,9 @@ Get visibility into what your app is doing.
 #### Community
 * Nodejitsu: http://docs.nodejitsu.com
 * How to Node: http://howtonode.org
+
+#### Coffee-script
+* http://coffeescript.org/
 
 #### Chef
 * nodejs cookbook: http://community.opscode.com/cookbooks/nodejs
