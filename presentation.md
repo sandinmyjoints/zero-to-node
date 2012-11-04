@@ -29,6 +29,8 @@ Zero to Node: Node.js in Production
 
 * Ryan and Chris assert: **Node.js can do this**.
 
+<img src='deck/img/nodejs.png' style='width: 35%'>
+
 * Me: OK.
 
 * Thus was born **cicero**.
@@ -54,7 +56,7 @@ Zero to Node: Node.js in Production
 
 * It needs to be quick and stable.
 
-* Serve ~500 requests/minute.
+* It needs to serve ~500 requests/minute.
 
 * * * * *
 
@@ -62,13 +64,13 @@ Zero to Node: Node.js in Production
 
 Install is easy. Check nodejs.org for instructions.
 
-On OS X, using Homebrew:
+* On OS X, using Homebrew:
 
 <pre>$ brew install node</pre>
 
 Recommended: Install NVM (node version manager).
 
-Allows multiple versions of Node to be installed at once.
+* Allows multiple versions of Node to be installed at once.
 
 * * * * *
 
@@ -93,7 +95,7 @@ Here's what I started with in `package.json`:
        "coffeelint": "0.4.0"
      }
 
-Then use Node package manager (NPM) to install:
+Then use Node package manager (NPM) to install them all:
 
     $ npm install
 
@@ -161,9 +163,7 @@ Sample:
 
 ## Connect and Express
 
-Middleware (Connect) and HTTP framework (Express).
-
-Provides:
+Connect (middleware) and Express (HTTP framework) provide:
 
 * Routes:
 
@@ -271,7 +271,9 @@ app.get "/audio", middle
 First async paradigm.
 
 <pre><code class="coffeescript">fs.open path, 'r', (err, file) ->
-  # Do something with file now that it's ready.
+  # In callback function with signature (err, file),
+  # can do something with file now that it's ready, or
+  # handle error if one occurred.
 </code></pre>
 * * * * *
 
@@ -280,7 +282,7 @@ First async paradigm.
 Second async paradigam.
 
     # Create our process object.
-    process = spawn TTS, args, options
+    process = spawn 'tts_command', args, options
 
     # Listen for error event.
     stderr = ""
@@ -303,14 +305,13 @@ Second async paradigam.
 * Can pipe readable into writeable.
 * Streams emit events:
 
-    * Readable: a bunch of `data` events and one `end` event
-    * Writeable: `drain`, `pipe`, `close` events
+    * Readable: a bunch of `data` events and one `end` event.
+    * Writeable: `drain`, `pipe`, `close` events.
 
 ### Why use streams?
 
-* Data comes and goes as fast as the OS can make it available.
 * Avoid 'procrastination', i.e., buffering data in memory. Send it as
-available/ready. Smooths out CPU and network load.
+available/ready from the OS. Smooths out CPU and network load.
 * Easy to reason about.
 
 * * * * *
@@ -321,7 +322,7 @@ Stream audio file to HTTP response (`res`) and S3 cache (`s3Stream`):
 
 <pre><code class="coffeescript"># Get stream references to audio file and S3.
 fileStream = fs.createReadStream tmpAudioFile
-s3Stream = getCloudStream(res)  # getCloudStream defined elsewhere.
+s3Stream = getCloudStream(res)
 
 # Let the streaming begin!
 fileStream.pipe(res)
@@ -342,7 +343,7 @@ Gain visibility into what your app is doing.
 
 * winston library
     * Allows multiple transports (e.g., console, filesystem, third-party service)
-    * Logs JSON
+    * Logs JSON:
 <pre><code>{
   "date": "2012-10-28T15:17:02.513Z",
   "level": "info",
@@ -359,8 +360,6 @@ Gain visibility into what your app is doing.
   "message": "Server started on port 2003."
 }
 </code></pre>
-
-* Monitoring services can read the logs, too.
 
 * * * * *
 

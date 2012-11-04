@@ -67,9 +67,10 @@
 <h2>The Solution</h2>
 <h3>A node.js app.</h3>
 <ul>
-<li>
-<p>Ryan and Chris assert: <strong>Node.js can do this</strong>.</p>
-</li>
+<li>Ryan and Chris assert: <strong>Node.js can do this</strong>.</li>
+</ul>
+<p><img src='deck/img/nodejs.png' style='width: 35%'></p>
+<ul>
 <li>
 <p>Me: OK.</p>
 </li>
@@ -103,18 +104,22 @@
 <p>It needs to be quick and stable.</p>
 </li>
 <li>
-<p>Serve ~500 requests/minute.</p>
+<p>It needs to serve ~500 requests/minute.</p>
 </li>
 </ul>
 </section>
              <section class="slide">
 <h2>Getting started</h2>
 <p>Install is easy. Check nodejs.org for instructions.</p>
-<p>On OS X, using Homebrew:</p>
+<ul>
+<li>On OS X, using Homebrew:</li>
+</ul>
 <pre>$ brew install node</pre>
 
 <p>Recommended: Install NVM (node version manager).</p>
-<p>Allows multiple versions of Node to be installed at once.</p>
+<ul>
+<li>Allows multiple versions of Node to be installed at once.</li>
+</ul>
 </section>
              <section class="slide">
 <h2>Dependencies</h2>
@@ -135,7 +140,7 @@
    "coffeelint": "0.4.0"
  }
 </code></pre>
-<p>Then use Node package manager (NPM) to install:</p>
+<p>Then use Node package manager (NPM) to install them all:</p>
 <pre><code>$ npm install
 </code></pre>
 </section>
@@ -197,8 +202,7 @@ var obj = {                 obj =
 </section>
              <section class="slide">
 <h2>Connect and Express</h2>
-<p>Middleware (Connect) and HTTP framework (Express).</p>
-<p>Provides:</p>
+<p>Connect (middleware) and Express (HTTP framework) provide:</p>
 <ul>
 <li>Routes:</li>
 </ul>
@@ -303,7 +307,9 @@ app.get "/audio", middle
 <h2>Callbacks</h2>
 <p>First async paradigm.</p>
 <pre><code class="coffeescript">fs.open path, 'r', (err, file) ->
-  # Do something with file now that it's ready.
+  # In callback function with signature (err, file),
+  # can do something with file now that it's ready, or
+  # handle error if one occurred.
 </code></pre>
 
 </section>
@@ -311,7 +317,7 @@ app.get "/audio", middle
 <h2>Events</h2>
 <p>Second async paradigam.</p>
 <pre><code># Create our process object.
-process = spawn TTS, args, options
+process = spawn 'tts_command', args, options
 
 # Listen for error event.
 stderr = ""
@@ -335,16 +341,15 @@ process.on "exit", (code) -&gt;
 <li>
 <p>Streams emit events:</p>
 <ul>
-<li>Readable: a bunch of <code>data</code> events and one <code>end</code> event</li>
-<li>Writeable: <code>drain</code>, <code>pipe</code>, <code>close</code> events</li>
+<li>Readable: a bunch of <code>data</code> events and one <code>end</code> event.</li>
+<li>Writeable: <code>drain</code>, <code>pipe</code>, <code>close</code> events.</li>
 </ul>
 </li>
 </ul>
 <h3>Why use streams?</h3>
 <ul>
-<li>Data comes and goes as fast as the OS can make it available.</li>
 <li>Avoid 'procrastination', i.e., buffering data in memory. Send it as
-available/ready. Smooths out CPU and network load.</li>
+available/ready from the OS. Smooths out CPU and network load.</li>
 <li>Easy to reason about.</li>
 </ul>
 </section>
@@ -353,7 +358,7 @@ available/ready. Smooths out CPU and network load.</li>
 <p>Stream audio file to HTTP response (<code>res</code>) and S3 cache (<code>s3Stream</code>):</p>
 <pre><code class="coffeescript"># Get stream references to audio file and S3.
 fileStream = fs.createReadStream tmpAudioFile
-s3Stream = getCloudStream(res)  # getCloudStream defined elsewhere.
+s3Stream = getCloudStream(res)
 
 # Let the streaming begin!
 fileStream.pipe(res)
