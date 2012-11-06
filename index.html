@@ -116,38 +116,50 @@
 </ul>
 <pre>$ brew install node</pre>
 
-<p>Recommended: Install NVM (node version manager).</p>
+<p>Recommended: Install NVM (Node version manager).</p>
 <ul>
 <li>Allows multiple versions of Node to be installed at once.</li>
+<li>Useful for trying out new versions (which are released often).</li>
 </ul>
 </section>
              <section class="slide">
 <h2>Dependencies</h2>
+<ul>
+<li>
 <p>Node has <strong>lots</strong> of third-party packages.</p>
-<p>Here's what I started with in <code>package.json</code>:</p>
-<pre><code># [some boilerplate...]
-"dependencies": {
-   "config": "0.4.15",
-   "express": "3.x",
-   "underscore": "1.3.3",
-   "deep-extend": "0.2.2",
-   "validator": "0.4.10",
-   "winston": "0.6.2"
- },
- "devDependencies": {
-   "coffee-script": "1.3.3",
-   "jshint": "0.7.1",
-   "coffeelint": "0.4.0"
- }
+</li>
+<li>
+<p>Available via Node package manager (NPM).</p>
+</li>
+<li>
+<p>First, specify dependencies in <code>package.json</code>:</p>
+</li>
+</ul>
+<pre><code class="javascript">"dependencies": {
+  "config": "0.4.15",
+  "express": "3.x",
+  "underscore": "1.3.3",
+  "deep-extend": "0.2.2",
+  "validator": "0.4.10",
+  "winston": "0.6.2"
+},
+"devDependencies": {
+  "coffee-script": "1.3.3",
+  "jshint": "0.7.1",
+  "coffeelint": "0.4.0"
+}
 </code></pre>
-<p>Then use Node package manager (NPM) to install them all:</p>
-<pre><code>$ npm install
-</code></pre>
+
+<ul>
+<li>Then NPM will install into <code>node_modules</code>:</li>
+</ul>
+<pre><code>$ npm install</code></pre>
+
 </section>
              <section class="slide">
 <h2>Modules</h2>
 <p><code>require</code> allows importing third-party packages into our code.</p>
-<p><code>require</code>'ing is dead simple.</p>
+<p><code>require</code>'ing is very simple:</p>
 <pre><code>express = require "express"
 </code></pre>
 <p>Modules are just js files.</p>
@@ -183,7 +195,7 @@ var obj = {                 obj =
              <section class="slide">
 <h2>Config</h2>
 <p><code>node-config</code> provides per-environment config.</p>
-<p>In <code>project_root/config</code>:</p>
+<p>In <code>cicero/config</code>:</p>
 <ul>
 <li><code>default.js</code>, <code>development.js</code>, <code>production.js</code></li>
 <li><code>node-config</code> chooses based on <code>NODE_ENV</code> environment variable.</li>
@@ -201,21 +213,25 @@ var obj = {                 obj =
 </code></pre>
 </section>
              <section class="slide">
-<h2>Connect and Express</h2>
-<p>Connect (middleware) and Express (HTTP framework) provide:</p>
+<h2>Express and Connect</h2>
+<p>Express (HTTP framework) and Connect (middleware) and provide:</p>
 <ul>
 <li>Routes:</li>
 </ul>
-<pre><code class="coffeescript">app = express()
+<pre><code class="coffeescript">express = require 'express'
+app = express()
 app.get '/audio', (req, res) ->
-   # Do route callback.
+  # Process request...
+  # When finished, send response:
+  res.send 200, responseData
 </code></pre>
 
 <ul>
 <li>Middleware:</li>
 </ul>
 <pre><code class="coffeescript">middle = (req, res, next) ->
-   # Process req, res. Call next.
+   # Process request...
+   # When finished, move on to next middleware:
    next()
 </code></pre>
 
@@ -247,7 +263,7 @@ app.get '/audio', (req, res) ->
 </section>
              <section class="slide">
 <h2>Structure and Decomposition</h2>
-<p><strong><code>index.(coffee|js)</code></strong></p>
+<p><strong><code>index.coffee</code></strong></p>
 <ul>
 <li>docstring</li>
 <li>requires</li>
@@ -258,7 +274,7 @@ app.get '/audio', (req, res) ->
 </section>
              <section class="slide">
 <h2>Structure and Decomposition</h2>
-<p><strong><code>tts.(coffee|js)</code></strong></p>
+<p><strong><code>tts.coffee</code></strong></p>
 <ul>
 <li>config</li>
 <li><code>TtsArgs</code></li>
@@ -268,15 +284,15 @@ app.get '/audio', (req, res) ->
 </section>
              <section class="slide">
 <h2>Structure and Decomposition</h2>
-<p>At bottom of <code>tts.(coffee|js)</code>, <code>Tts*</code> objects expose middleware: fns with
-signature <code>(req, res, next)</code>:</p>
+<p><code>tts.coffee</code> exposes middleware functions (signature is <code>(req, res,
+next)</code>):</p>
 <pre><code class="coffeescript">module.exports =
   parseArgs:   TtsArgs.parse
   searchCache: TtsCache.search
   exec:        TtsExec.exec
 </code></pre>
 
-<p>In <code>index.(coffee|js)</code>:</p>
+<p>In <code>index.coffee</code>:</p>
 <pre><code class="coffeescript">tts = require "./tts"
 # ...
 
@@ -290,7 +306,8 @@ app.get "/audio", middle
 <h2>Async</h2>
 <ul>
 <li>
-<p>I started doing fs operations with sync methods like <code>fs.openSync</code>.</p>
+<p>I started cicero doing filesystem operations with sync methods like
+  <code>fs.openSync</code>.</p>
 </li>
 <li>
 <p>But why is that a problem?</p>
@@ -307,9 +324,13 @@ app.get "/audio", middle
 <h2>Callbacks</h2>
 <p>First async paradigm.</p>
 <pre><code class="coffeescript">fs.open path, 'r', (err, file) ->
-  # In callback function with signature (err, file),
-  # can do something with file now that it's ready, or
-  # handle error if one occurred.
+  # In callback function.
+
+  # Handle error if err is non-null:
+  handleError err if err
+
+  # Otherwise, everything went ok, and we can do something
+  # with file now that it's ready...
 </code></pre>
 
 </section>
@@ -317,16 +338,16 @@ app.get "/audio", middle
 <h2>Events</h2>
 <p>Second async paradigam.</p>
 <pre><code># Create our process object.
-process = spawn 'tts_command', args, options
+ttsProcess = spawn 'tts_command', args, options
 
 # Listen for error event.
 stderr = ""
-process.stderr.on "data", (data) -&gt;
-  # Accumulate data.
+ttsProcess.stderr.on "data", (data) -&gt;
+  # Accumulate data from stderr.
   stderr += data
 
 # Listen for exit event.
-process.on "exit", (code) -&gt;
+ttsProcess.on "exit", (code) -&gt;
   # Check errors, exit.
   if stderr or code isnt 0
     return new Error(stderr ? "TTS failed")
@@ -336,15 +357,10 @@ process.on "exit", (code) -&gt;
 <h2>Streams</h2>
 <ul>
 <li>Streams are a powerful way of thinking about IO.</li>
+<li>Send output of something directly as input to something else (like pipes in
+  Unix).</li>
 <li>Streams can be readable, writeable, or both.</li>
 <li>Can pipe readable into writeable.</li>
-<li>
-<p>Streams emit events:</p>
-<ul>
-<li>Readable: a bunch of <code>data</code> events and one <code>end</code> event.</li>
-<li>Writeable: <code>drain</code>, <code>pipe</code>, <code>close</code> events.</li>
-</ul>
-</li>
 </ul>
 <h3>Why use streams?</h3>
 <ul>
@@ -356,17 +372,20 @@ available/ready from the OS. Smooths out CPU and network load.</li>
              <section class="slide">
 <h2>Streams</h2>
 <p>Stream audio file to HTTP response (<code>res</code>) and S3 cache (<code>s3Stream</code>):</p>
-<pre><code class="coffeescript"># Get stream references to audio file and S3.
+<pre><code class="coffeescript"># Get readable stream reference to audio file.
 fileStream = fs.createReadStream tmpAudioFile
-s3Stream = getCloudStream(res)
 
+# res is our HTTP response object, and it's a writeable stream.
+# s3Stream is our writeable stream to Amazon S3.
 # Let the streaming begin!
 fileStream.pipe(res)
-tmpStream.pipe(s3Stream)
+fileStream.pipe(s3Stream)
 
+# Listen for error events.
 fileStream.on "error", errHandle
 s3Stream.on "error", errHandle
 
+# Cleanup on end event.
 fileStream.on "end", ->
   # Do cleanup (delete tmpAudioFile)
 </code></pre>
@@ -376,20 +395,14 @@ fileStream.on "end", ->
 <h2>Logging</h2>
 <p>Gain visibility into what your app is doing.</p>
 <ul>
-<li>
-<p>winston library</p>
-<ul>
+<li>Winston library<ul>
 <li>Allows multiple transports (e.g., console, filesystem, third-party service)</li>
-<li>Logs JSON
+<li>Logs JSON:
 <pre><code>{
   "date": "2012-10-28T15:17:02.513Z",
   "level": "info",
   "env": "production",
   "type": "server",
-  "serverHost": "inkling",
-  "serverId": "m",
-  "serverPid": 99632,
-  "serverName": "prod-server",
   "addr": "0.0.0.0",
   "port": 2003,
   "vers": "v0.8.9",
@@ -399,16 +412,13 @@ fileStream.on "end", ->
 </code></pre></li>
 </ul>
 </li>
-<li>
-<p>Monitoring services can read the logs, too.</p>
-</li>
 </ul>
 </section>
              <section class="slide">
 <h2>Provision and Deploy</h2>
 <ul>
 <li>Many ways you could do this.</li>
-<li>We use Chef and AWS.</li>
+<li>We use Chef and Amazon Web Services (AWS).</li>
 <li>Find Chef cookbooks online and customize when necessary.</li>
 <li>Time to deploy? Update version and Chef takes of the rest.</li>
 </ul>
@@ -428,7 +438,7 @@ fileStream.on "end", ->
 <li>Thinking async.</li>
 <li>Newness/rapid development.</li>
 <li>DIY / FIOY (figure it out yourself).</li>
-<li>Minimalism sometimes extends to docs!</li>
+<li>Minimalist aesthetic sometimes extends to docs.</li>
 </ul>
 </section>
              <section class="slide">
@@ -445,7 +455,7 @@ fileStream.on "end", ->
 </ul>
 <h4>Coffee-script</h4>
 <ul>
-<li><a href="http://coffeescript.org/">coffeescript.org/</a></li>
+<li><a href="http://coffeescript.org">coffeescript.org</a></li>
 </ul>
 <h4>Chef</h4>
 <ul>

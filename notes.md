@@ -1,5 +1,4 @@
 ## Prep
-
 * Audio sample to play: fantastico, java script
 
 ## Slide 1 - Title
@@ -105,20 +104,20 @@ simplicity so easy to maintain.
 ## Slide 10 - Dev Env
 
 * I'll briefly describe my dev environment.
+* Coffescript is "a little language that compiles to Javascript."
+* Coffescript looks better, more readable, significant whitespace. It reminds me
+  of Python. Also hear it's like Ruby.
 * Coffescript is really "the best parts of Javascript". Protects you from
   tripping on some gotchas like global variables, semicolon insertion, weird
   type coercion.
-* Coffescript looks better, more readable, significant whitespace. It reminds me
-  of Python. Also hear it's like Ruby.
 * Quick CS explanation (see slide)
 * My examples are in CS. Ask if anything is unclear about it.
 * Grunt: Command line dev tool. Very useful for tasks: watch, test, server. Like
   Rake in Ruby.
-* REPL = read eval print loop. The node and Coffeescript REPLs are nowhere near
-  as good as IPython. Still sometimes useful. Oh well.
 
 ## Slide 11 - Config
 
+* So let's get started with our application. First, handling configuration.
 * `node-config` is one of the modules we installed above.
 * It provides runtime configuration control for node deployments.
 * Define config files per environment. (see slide)
@@ -141,15 +140,17 @@ simplicity so easy to maintain.
 
 ## Slide 13 - Structure and Decomposition - Project layout
 
-* Node is ripe for structuring. It's up to you.
-* So here's what we do:
-* I'm going to skip to the source directory  (see slide)
-* index.coffee and tts.coffee are the main source.
+* Node is ripe for structuring. It's entirely up to you, unlike Django or RoR.
+* So here's what we did for Cicero:
+* First, directory structure. It's slightly more complicated because we used
+  Coffee-script.
+* I'm going to skip down to the source directory  (see slide)
+* index.coffee and tts.coffee are the main source code files.
 * grunt compiles from src/server into lib, from src/config into config.
-* (If you're just writing javascript, you don't need to src directory.)
 
 ## Slide 14 - S and D - Index
 
+* Now, structure within the code modules.
 * At first I put all my code in one file. It worked. 
 * It wasn't a terribly long file, but it's better to structure for long-term
   readability and maintenance.
@@ -184,9 +185,11 @@ simplicity so easy to maintain.
 
 ## Slide 17 - Async
 
+* So now that we've laid out the app structure, I'm going to discuss one of the
+  techniques used within the app: async control flow.
 * I looked at some early commits and found sync methods.
 * Sync is a problem because Node is single-threaded, so one blocking call can
-halt everything in the entire Node process.
+halt everything in the entire Node process, or if not halt, then slow down.
 * Node is designed for async, everything in the std lib and the ecosystem
   supports async, and async works well in practice for web apps, so I wanted to
   be sure to use it.
@@ -228,10 +231,9 @@ halt everything in the entire Node process.
 * Streams are like pipes in unix. Send output of something directly as input to
   something else.
 * Can be readable, writeable, both. Can pipe readable into writeable.
-* Listen for events. Handle end and error events, particularly. (Example coming)
 * Why use streams?
-* Avoid 'procrastination', i.e., buffering data in memory. Send it as
-available/ready from the OS. Smooths out CPU and network load.
+* Avoid buffering data in memory. Send it as available/ready from the
+OS. Smooths out CPU and network load. Users see faster response.
 * Easy to reason about.
 
 ## Slide 21 - Stream example
@@ -239,11 +241,14 @@ available/ready from the OS. Smooths out CPU and network load.
 * Here's an example use of streams to return audio data (see slide).
 * Note that one readable stream is piping to two totally separate writeable
   streams simultaneously. Node and the OS handle all that for us.
+* Listen for events. Handle end and error events, particularly.
 * Ideal would be to stream directly from the TTS application without touching the
 filesystem, but the application is picky and uncooperative.
 
 ## Slide 22 - Logging 
 
+* Now that we have our app working, let's start thinking about operations and
+  maintenance.
 * Logging allows you visibility into what your app is doing.
 * This is very important for production deployment so you know the app is
   working correctly, or if it breaks, you know what is going wrong.
@@ -256,7 +261,7 @@ filesystem, but the application is picky and uncooperative.
   business value, say, what kinds of words or phrases do people tend to want to
   pronounce?
 
-## Slide 23 - Deployment/Chef/AWS
+## Slide 23 - Provisioning and Deployment
 
 * There are many ways you could do this. It's a big topic.
 * We use Chef for provisioning and deployment. Chef is "an open-source systems
@@ -312,6 +317,7 @@ filesystem, but the application is picky and uncooperative.
 ## Slide 26 - Thanks and Questions
 
 * Thanks!
+* I will put slides online at my website.
 * Quick note: If this sounded interesting, SpanishDict is hiring. Talk to me,
   Chris, or Ryan.
 * Questions?
