@@ -140,53 +140,55 @@ var obj = {                 obj =
 
 * * * * *
 
-## Config
-
+## Configuration
 
 `node-config` provides per-environment config.
 
-In `cicero/config`:
-
-* `default.js`, `development.js`, `production.js`
-* `node-config` chooses based on `NODE_ENV` environment variable.
-
-Sample:
+Sample config:
 
     module.exports =
       app:
-        addr: "0.0.0.0"
         port: 8004
+      log:
+        level: "debug"
       tts:
         input:
           maxChars: 200
-        languages:
-          available: ["en", "es"]
+
+Place config files In `config` sub-directory:
+
+* `default.js`
+* `development.js`
+* `production.js`
+
+`node-config` chooses based on `NODE_ENV` environment variable.
 
 * * * * *
 
 ## Express and Connect
 
-Express (HTTP framework) and Connect (middleware) and provide:
+Express (HTTP framework) and Connect (middleware) provide flexible flow control:
 
-* Routes:
+<pre><code class="coffeescript"># Create Express app.
+express = require 'express'
+app     = express()
 
-<pre><code class="coffeescript">express = require 'express'
-app = express()
+# Set up a route.
 app.get '/audio', (req, res) ->
   # Process request...
   # When finished, send response:
   res.send 200, responseData
+
+# Add middleware.
+middle = (req, res, next) ->
+  # Process request...
+  # When finished, can short-circuit:
+  return res.send 200, responseData if allDone
+  # Or can move on to next middleware:
+  next()
+  
+app.use middle
 </code></pre>
-
-* Middleware:
-
-<pre><code class="coffeescript">middle = (req, res, next) ->
-   # Process request...
-   # When finished, move on to next middleware:
-   next()
-</code></pre>
-
-* Very flexible flow of control.
 
 * * * * *
 
@@ -195,22 +197,15 @@ app.get '/audio', (req, res) ->
 Really up to you. Here's our project layout:
 
     /cicero
-       |-config
-       |    |--default.js
-       |    |--development.js
+       |-config    
        |-docs
-       |-lib
-       |  |--server
-       |      |--index.js
-       |      |--tts.js
+       |-lib               (<--- compiled JS)
+       |  |--index.js
+       |  |--tts.js
        |-node_modules ...
-       |-src
-          |-config
-          |   |--default.coffee
-          |   |--development.coffee
-          |-server
-              |--index.coffee
-              |--tts.coffee
+       |-src               (<--- Coffee-script)
+          |--index.coffee
+          |--tts.coffee
 
 
 * * * * *
@@ -220,10 +215,9 @@ Really up to you. Here's our project layout:
 **`index.coffee`**
 
 * docstring
-* requires
-* logger config
+* logger setup
 * app creation and config
-* routing
+* routes
 
 * * * * *
 
@@ -231,7 +225,6 @@ Really up to you. Here's our project layout:
 
 **`tts.coffee`**
 
-* config
 * `TtsArgs`
 * `TtsExec`
 * `TtsCache`
@@ -240,8 +233,8 @@ Really up to you. Here's our project layout:
 
 ## Structure and Decomposition
 
-`tts.coffee` exposes middleware functions (signature is `(req, res,
-next)`):
+`tts.coffee` exposes middleware functions with signature `(req, res,
+next)`:
 
 <pre><code class="coffeescript">module.exports =
   parseArgs:   TtsArgs.parse
@@ -249,13 +242,10 @@ next)`):
   exec:        TtsExec.exec
 </code></pre>
 
-In `index.coffee`:
+Attach middleware to routes in `index.coffee`:
 
-<pre><code class="coffeescript">tts = require "./tts"
-# ...
-
+<pre><code class="coffeescript">tts    = require "./tts"
 middle = [log, tts.parseArgs, tts.searchCache, tts.exec]
-
 app.get "/audio", middle
 </code></pre>
 
@@ -391,7 +381,14 @@ Gain visibility into what your app is doing.
 
 * * * * *
 
-## Challenges
+## Summing Up
+
+### Results
+
+* http://audio.spanishdict.com/audio?lang=en&speed=25&text=java+script works
+* Cicero meets our needs
+
+### Node Challenges
 
 * Thinking async.
 * Newness/rapid development.

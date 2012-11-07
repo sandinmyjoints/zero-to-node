@@ -140,15 +140,17 @@ var obj = {                 obj =
 
 * * * * *
 
-## Config
-
+## Configuration
 
 `node-config` provides per-environment config.
 
-In `cicero/config`:
+Place config files In `cicero/config` directory:
 
-* `default.js`, `development.js`, `production.js`
-* `node-config` chooses based on `NODE_ENV` environment variable.
+* `default`
+* `development`
+* `production`
+
+`node-config` chooses based on `NODE_ENV` environment variable.
 
 Sample:
 
@@ -391,7 +393,13 @@ Gain visibility into what your app is doing.
 
 * * * * *
 
-## Challenges
+## Summing Up
+
+### Results
+
+* Cicero meets our needs
+
+### Node Challenges
 
 * Thinking async.
 * Newness/rapid development.

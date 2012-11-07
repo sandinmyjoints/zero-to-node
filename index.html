@@ -193,72 +193,64 @@ var obj = {                 obj =
 </ul>
 </section>
              <section class="slide">
-<h2>Config</h2>
+<h2>Configuration</h2>
 <p><code>node-config</code> provides per-environment config.</p>
-<p>In <code>cicero/config</code>:</p>
-<ul>
-<li><code>default.js</code>, <code>development.js</code>, <code>production.js</code></li>
-<li><code>node-config</code> chooses based on <code>NODE_ENV</code> environment variable.</li>
-</ul>
-<p>Sample:</p>
+<p>Sample config:</p>
 <pre><code>module.exports =
   app:
-    addr: "0.0.0.0"
     port: 8004
+  log:
+    level: "debug"
   tts:
     input:
       maxChars: 200
-    languages:
-      available: ["en", "es"]
 </code></pre>
+<p>Place config files In <code>config</code> sub-directory:</p>
+<ul>
+<li><code>default.js</code></li>
+<li><code>development.js</code></li>
+<li><code>production.js</code></li>
+</ul>
+<p><code>node-config</code> chooses based on <code>NODE_ENV</code> environment variable.</p>
 </section>
              <section class="slide">
 <h2>Express and Connect</h2>
-<p>Express (HTTP framework) and Connect (middleware) and provide:</p>
-<ul>
-<li>Routes:</li>
-</ul>
-<pre><code class="coffeescript">express = require 'express'
-app = express()
+<p>Express (HTTP framework) and Connect (middleware) provide flexible flow control:</p>
+<pre><code class="coffeescript"># Create Express app.
+express = require 'express'
+app     = express()
+
+# Set up a route.
 app.get '/audio', (req, res) ->
   # Process request...
   # When finished, send response:
   res.send 200, responseData
+
+# Add middleware.
+middle = (req, res, next) ->
+  # Process request...
+  # When finished, can short-circuit:
+  return res.send 200, responseData if allDone
+  # Or can move on to next middleware:
+  next()
+
+app.use middle
 </code></pre>
 
-<ul>
-<li>Middleware:</li>
-</ul>
-<pre><code class="coffeescript">middle = (req, res, next) ->
-   # Process request...
-   # When finished, move on to next middleware:
-   next()
-</code></pre>
-
-<ul>
-<li>Very flexible flow of control.</li>
-</ul>
 </section>
              <section class="slide">
 <h2>Structure and Decomposition</h2>
 <p>Really up to you. Here's our project layout:</p>
 <pre><code>/cicero
-   |-config
-   |    |--default.js
-   |    |--development.js
+   |-config    
    |-docs
-   |-lib
-   |  |--server
-   |      |--index.js
-   |      |--tts.js
+   |-lib               (&lt;--- compiled JS)
+   |  |--index.js
+   |  |--tts.js
    |-node_modules ...
-   |-src
-      |-config
-      |   |--default.coffee
-      |   |--development.coffee
-      |-server
-          |--index.coffee
-          |--tts.coffee
+   |-src               (&lt;--- Coffee-script)
+      |--index.coffee
+      |--tts.coffee
 </code></pre>
 </section>
              <section class="slide">
@@ -266,17 +258,15 @@ app.get '/audio', (req, res) ->
 <p><strong><code>index.coffee</code></strong></p>
 <ul>
 <li>docstring</li>
-<li>requires</li>
-<li>logger config</li>
+<li>logger setup</li>
 <li>app creation and config</li>
-<li>routing</li>
+<li>routes</li>
 </ul>
 </section>
              <section class="slide">
 <h2>Structure and Decomposition</h2>
 <p><strong><code>tts.coffee</code></strong></p>
 <ul>
-<li>config</li>
 <li><code>TtsArgs</code></li>
 <li><code>TtsExec</code></li>
 <li><code>TtsCache</code></li>
@@ -284,20 +274,17 @@ app.get '/audio', (req, res) ->
 </section>
              <section class="slide">
 <h2>Structure and Decomposition</h2>
-<p><code>tts.coffee</code> exposes middleware functions (signature is <code>(req, res,
-next)</code>):</p>
+<p><code>tts.coffee</code> exposes middleware functions with signature <code>(req, res,
+next)</code>:</p>
 <pre><code class="coffeescript">module.exports =
   parseArgs:   TtsArgs.parse
   searchCache: TtsCache.search
   exec:        TtsExec.exec
 </code></pre>
 
-<p>In <code>index.coffee</code>:</p>
-<pre><code class="coffeescript">tts = require "./tts"
-# ...
-
+<p>Attach middleware to routes in <code>index.coffee</code>:</p>
+<pre><code class="coffeescript">tts    = require "./tts"
 middle = [log, tts.parseArgs, tts.searchCache, tts.exec]
-
 app.get "/audio", middle
 </code></pre>
 
@@ -433,7 +420,13 @@ fileStream.on "end", ->
 <p><img src='deck/img/scout.png'></p>
 </section>
              <section class="slide">
-<h2>Challenges</h2>
+<h2>Summing Up</h2>
+<h3>Results</h3>
+<ul>
+<li><a href="http://audio.spanishdict.com/audio?lang=en&amp;speed=25&amp;text=java+script">audio.spanishdict.com/audio?lang=en&amp;speed=25&amp;text=java+script</a> works</li>
+<li>Cicero meets our needs</li>
+</ul>
+<h3>Node Challenges</h3>
 <ul>
 <li>Thinking async.</li>
 <li>Newness/rapid development.</li>

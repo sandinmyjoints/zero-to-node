@@ -1,6 +1,3 @@
-## Prep
-* Audio sample to play: fantastico, java script
-
 ## Slide 1 - Title
 
 * Hi, thanks for coming. 
@@ -29,7 +26,7 @@ words pronounced correctly.
 * Users are arbitrary--they want to hear how to pronounce whatever words they
   want to learn!
 * We have a text to speech (TTS) product that actually does a pretty good job of
-pronouncing arbitrary Spanish and English text (play samples).
+pronouncing arbitrary Spanish and English text (play Spanish sample).
 * The TTS application is enterprise software that only runs on the command line,
 but our old PHP app is not working well and not worth repairing.
 
@@ -46,12 +43,13 @@ speed. So the new guy--me--can do it.
 
 ## Slide 5 - Yikes!
 
-* This is my internal reaction.
+* Yikes: This is my internal reaction.
 * Lots of users!
 * New stack and framework!
 * Async!
-* New to server-side Node! Learning curve. 
 * Where to start? Hopefully my experience can help you.
+
+<br><br>
 
 ## Slide 6 - What's this app really doing
 
@@ -104,49 +102,66 @@ simplicity so easy to maintain.
 ## Slide 10 - Dev Env
 
 * I'll briefly describe my dev environment.
-* Coffescript is "a little language that compiles to Javascript."
-* Coffescript looks better, more readable, significant whitespace. It reminds me
-  of Python. Also hear it's like Ruby.
+* Coffescript is "a little language that compiles to Javascript." You write
+  Coffee-script but you run JS.
 * Coffescript is really "the best parts of Javascript". Protects you from
   tripping on some gotchas like global variables, semicolon insertion, weird
   type coercion.
+* It passes JSLint static analysis without warnings, works in all JS runtimes, 
+* Coffescript also looks better than straight JS: less verbose, more readable,
+  uses significant whitespace. It reminds me of Python.
 * Quick CS explanation (see slide)
 * My examples are in CS. Ask if anything is unclear about it.
-* Grunt: Command line dev tool. Very useful for tasks: watch, test, server. Like
-  Rake in Ruby.
+* I use a command line dev tool called grunt. Very useful for dev tasks that
+  come up over and over: watch, test, server. Kind of like Rake in Ruby.
 
-## Slide 11 - Config
+## Slide 11 - Configuration
 
-* So let's get started with our application. First, handling configuration.
-* `node-config` is one of the modules we installed above.
+* So let's get started with our application. First up, handling configuration.
+* `node-config` was one of the packages we installed above.
 * It provides runtime configuration control for node deployments.
-* Define config files per environment. (see slide)
+* For example, in dev, we wanted debug-related log messages, but in production,
+  we'd want fewer log messages and maybe bind to a different port.
+* We have some applications-specific config as well: max input characters.
+* We can define config files per environment and node-config will choose. 
 
-## Slide 12 - Connect and Express
+## Slide 12 - Express and Connect
 
-* Express is a node HTTP framework built on Connect, which is a middleware
-  framework.
-* They're so much part of my node experience that I almost forget they are their own
-  things because they provide essentials: routes and middleware (see slide).
-* Deceivingly simple, extremely flexible.
-* Think mostly in terms of middleware. Pass requests through chain of
-  middleware. Middleware are functions that take req, res, do something, and
-  call the next middleware function.
-* Example: logging. You get a request to '/audio', pass to log middleware first,
-  it logs the request, then passes to next, which parses the query string
-  parameters, then next, etc.
+* Express was another package we installed.
+* Express is a node HTTP application framework built on Connect, which is a
+  middleware framework.
+* They're so much part of my node experience that I almost forget they are their
+  own things because they provide essentials: an HTTP application, and its
+  routes and middleware. (see slide)
+* Routes are where requests to a url go. Typically they end in sending
+  something back to the user via response.
+* Middleware allows common functionality to be shared among routes. So we can
+  pass all our requests through a chain of middleware.
+* Middleware are just functions that take req, res, do something, and call the
+  next middleware function.
+* Example: logging. Any request we get to any route, we want to log it, so we
+  pass to log middleware first, it logs the request, then passes to next.
+* Now, sometimes you might want to short-circuit in middleware and send something back to
+  the user right then and there. You can do that.
+* Exmaple: if there was a request to '/audio' for some text, and in the cache-lookup
+  middleware we find the audio for that text, then we can just send that audio
+  data without going any further.
 * We can send some routes through some middleware, like auth, but others will go
   through different middleware.
+* Seemingly simple, extremely flexible.
 
 ## Slide 13 - Structure and Decomposition - Project layout
 
 * Node is ripe for structuring. It's entirely up to you, unlike Django or RoR.
 * So here's what we did for Cicero:
-* First, directory structure. It's slightly more complicated because we used
-  Coffee-script.
-* I'm going to skip down to the source directory  (see slide)
-* index.coffee and tts.coffee are the main source code files.
-* grunt compiles from src/server into lib, from src/config into config.
+* First, the project layout in terms of directory structure. 
+* Cicero's structure is slightly more complicated because we used Coffee-script.
+* We have this src directory at the bottom that holds Coffee-script. 
+* index.coffee and tts.coffee are the main source code files. We'll discuss them
+  in a second.
+* grunt has a build task that compiles from src/server into lib, from src/config
+  into config. Coffee goes in, Javascript comes out. 
+* `lib` is a convention for where JS source code goes. 
 
 ## Slide 14 - S and D - Index
 
@@ -156,32 +171,42 @@ simplicity so easy to maintain.
   readability and maintenance.
 * But how? In Django, you have resuable apps that have models.py and urls.py and
   views.py, etc. None of that here!
-* Everything is so flexible, so it's up to you. It's preferences, not dictated.
-* Ryan sat me down and we broke them up. 
-* First: index. Index holds mostly sort of boilerplate-y stuff (see slide).
-* But it's important: it ensures you'll get logging and your routes will work.
+* Everything is flexible, so it's up to you. It's preferences, not dictated.
+* First: index. Index holds the app skeleton, including setup and boilerplate-y
+  stuff (see slide).
+* A docstring that explains what the app is and how to use it.  
+* Logging setup.
+* Create the app.
+* Set up routes.
 * Separate from app logic.
 
 ## Slide 15 - S and D  - Tts
 
-* config: Read runtime config from files
-* Then structure by function: it's all exposed as middleware. We're free to
-  break up within the code as we see fit
-* For these, we used Coffescript classes basically as namespaces, just js
-  objects that encapsulate related code. 
-* TtsArgs: Process the arguments from query string params to command line flags
-* TtsExec: Spawn the process and get its results
-* TtsCache: Look for audio mp3 for some particular user input in cache. Serve it
-  if it's there, otherwise store it.
+* We're free to break up the code as we see fit, so we let function dictate
+  structure.
+* We used Coffescript classes as wrappers. But basically they're just js objects
+  that encapsulate related code.
+* TtsArgs: Process arguments from query string params to command line flags for
+  tts application.
+* TtsExec: Spawn the tts application process and serve its results to user and
+  cache.
+* TtsCache: Look for audio data for some particular user input in cache. Serve
+  it if it's there.
 
-## Slide 16 - S and D - How to use as middleware
+## Slide 16 - S and D - Connect app routes with app logic via middleware
 
-* How to use middleware? Middleware is just a function that takes `(req, res,
-  next)`, does something, and calls next, possibly passing an error.
-* Every request goes through this chain:
+* So we're going to connect our app skeleton in index with our app logic in
+  tts.coffee using middleware.
+* TTS exposes several middleware functions (which are just functions that take `(req, res,
+  next)` and do something, then call next or return a response).
+* parseArgs, searchCache, exec.
+* Then we attach logging middleware and our TTS middleware to the /audio route.
+* So every request goes through this chain:
+  * log request
   * process args
   * search cache, return if found
-  * exec tts if not in cache, store in cache
+  * exec tts command line application if not in cache, serve to user and store
+    in cache
 
 ## Slide 17 - Async
 
@@ -245,6 +270,8 @@ OS. Smooths out CPU and network load. Users see faster response.
 * Ideal would be to stream directly from the TTS application without touching the
 filesystem, but the application is picky and uncooperative.
 
+<br><br>
+
 ## Slide 22 - Logging 
 
 * Now that we have our app working, let's start thinking about operations and
@@ -288,10 +315,15 @@ filesystem, but the application is picky and uncooperative.
 * We configure alerts so that if the number of requests drops below a threshold,
   or the amount of memory used goes above a threshold, we get emails or texts.
 
-<img src='deck/img/scout.png'>
+## Slide 25 - Summing up
 
+### Results
 
-## Slide 25 - Challenges
+* http://audio.spanishdict.com/audio?lang=en&speed=25&text=java+script works
+* Cicero meets our needs
+* Serves audio quickly and efficiently, without fuss
+
+### Challenges
 
 * Async means wrapping your head around a new kind of flow control if you're
   used to sync. Debug is a little messier, but tolerable.
@@ -316,8 +348,10 @@ filesystem, but the application is picky and uncooperative.
 
 ## Slide 26 - Thanks and Questions
 
-* Thanks!
-* I will put slides online at my website.
+* So hopefully this presentation has explained, one way at least, to go from
+  zero to node.
+* Thanks for listening!
+* I'll put a link to the slides online at my website soon.
 * Quick note: If this sounded interesting, SpanishDict is hiring. Talk to me,
   Chris, or Ryan.
 * Questions?
