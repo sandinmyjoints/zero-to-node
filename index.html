@@ -313,11 +313,11 @@ app.get "/audio", middle
 <pre><code class="coffeescript">fs.open path, 'r', (err, file) ->
   # In callback function.
 
-  # Handle error if err is non-null:
-  handleError err if err
+  # Short-circuit and handle error if err is non-null:
+  return handleError err if err
 
-  # Otherwise, everything went ok, and we can do something
-  # with file now that it's ready...
+  # Otherwise, everything went ok, and we can do 
+  # something with file now that it's ready...
 </code></pre>
 
 </section>
